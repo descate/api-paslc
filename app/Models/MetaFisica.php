@@ -13,18 +13,17 @@ class MetaFisica extends Model
     protected $table = 'proyectos.meta_fisica';
     protected $primaryKey = 'id';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'proyecto_id',
         'tipo_meta_id',
         'cantidad',
-        'created_by',
-        'updated_by',
+        'etapa_proyecto_id',
     ];
 
     protected $casts = [
         'cantidad' => 'decimal:2',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
     public function tipoMeta(): BelongsTo
@@ -34,7 +33,12 @@ class MetaFisica extends Model
 
     public function proyecto(): BelongsTo
     {
-        // Asumiendo que tu modelo de proyecto también está en la carpeta Models
         return $this->belongsTo(ProyectoInversion::class, 'proyecto_id', 'id');
+    }
+
+    // Nueva relación añadida basada en la FK de la tabla
+    public function etapaProyecto(): BelongsTo
+    {
+        return $this->belongsTo(EtapaProyecto::class, 'etapa_proyecto_id', 'id');
     }
 }

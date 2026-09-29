@@ -10,14 +10,13 @@ class EstadoGestion extends Model
     use HasFactory;
 
     protected $table = 'catalogo.estado_gestion';
+    public $timestamps = false;
 
     protected $fillable = [
         'codigo',
         'nombre',
         'etapa_id',
         'activo',
-        'created_by',
-        'updated_by'
     ];
 
     protected $casts = [

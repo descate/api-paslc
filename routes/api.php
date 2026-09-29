@@ -11,43 +11,77 @@ use App\Http\Controllers\ProyectoInversionController;
 use App\Http\Controllers\TipoEtapaPiController;
 use App\Http\Controllers\EstadoGestionController;
 use App\Http\Controllers\ControlGastoController;
-use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\ContratoProyectoController;
 use App\Http\Controllers\ValorizacionProgramadaController;
-// Nuevos controladores importados
 use App\Http\Controllers\EstadoValorizacionController;
 use App\Http\Controllers\ValorizacionEjecutadaController;
 use App\Http\Controllers\MetaFisicaController;
 use App\Http\Controllers\AyudaMemoriaController;
+use App\Http\Controllers\EtapaProyectoController;
+use App\Http\Controllers\EstadoSituacionalController;
+use App\Http\Controllers\AccionEstadoSituacionalController;
+use App\Http\Controllers\CatalogoController;
+use App\Http\Controllers\DetalleEtapaProyectoController;
+use App\Http\Controllers\UserController;
 
+// ==========================================
+// RUTAS PÚBLICAS (Sin sesión)
+// ==========================================
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::resource('/obra', ObraController::class);
-Route::get('/seguimiento-proyectos', [SeguimientoProyectoController::class, 'index']);
-Route::get('/dashboard/kpis', [DashboardController::class, 'getKpis']);
 
-// Rutas para la gestión de Proyectos de Inversión [cite: 21]
-Route::apiResource('proyectos', ProyectoInversionController::class);
-
-// Rutas para los Catálogos de Etapas y Estados [cite: 22, 23]
-Route::apiResource('etapas-pi', TipoEtapaPiController::class);
-Route::apiResource('estados-gestion', EstadoGestionController::class);
-
-// Rutas para el Control de Gastos [cite: 24]
-Route::apiResource('control-gasto', ControlGastoController::class);
-Route::get('/contratos', [ContratoController::class, 'index']);
-Route::get('/contratos/{id}', [ContratoController::class, 'show']);
-Route::apiResource('valorizaciones-programadas', ValorizacionProgramadaController::class);
-
-Route::get('/metas-fisicas', [MetaFisicaController::class, 'index']);
-Route::get('/proyectos/{id}/ayuda-memoria', [AyudaMemoriaController::class, 'show']);
-// Rutas para las Valorizaciones Ejecutadas
-Route::apiResource('estados-valorizacion', EstadoValorizacionController::class);
-Route::apiResource('valorizaciones-ejecutadas', ValorizacionEjecutadaController::class);
-
+// ==========================================
+// RUTAS PROTEGIDAS (Requieren Token de Angular)
+// ==========================================
 Route::middleware('auth:sanctum')->group(function () {
+
+    // Auth
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Catálogos Generales
+    Route::get('/catalogos', [CatalogoController::class, 'index']);
+
+    // Dashboard y KPIs
+    Route::get('/dashboard/kpis', [DashboardController::class, 'getKpis']);
+
+    // Obras y Seguimiento
+    Route::resource('/obra', ObraController::class);
+    Route::get('/seguimiento-proyectos', [SeguimientoProyectoController::class, 'index']);
+    Route::get('/seguimiento-proyectos/{id}', [SeguimientoProyectoController::class, 'show']);
+
+    // Proyectos de Inversión
+    Route::apiResource('proyectos', ProyectoInversionController::class);
+    Route::get('/proyectos/{id}/ayuda-memoria', [AyudaMemoriaController::class, 'show']);
+
+    // Etapas del Proyecto
+    Route::get('/etapas-proyecto/proyecto/{proyecto_id}', [EtapaProyectoController::class, 'getByProyecto']);
+    Route::get('/etapas-proyecto/{id}/dashboard-completo', [DetalleEtapaProyectoController::class, 'show']);
+    Route::apiResource('etapas-proyecto', EtapaProyectoController::class);
+
+    // Catálogos de Etapas y Estados
+    Route::apiResource('etapas-pi', TipoEtapaPiController::class);
+    Route::apiResource('estados-gestion', EstadoGestionController::class);
+
+    // Control de Gastos y Contratos
+    Route::apiResource('control-gasto', ControlGastoController::class);
+    Route::get('/contratos-proyecto/etapa/{etapa_proyecto_id}', [ContratoProyectoController::class, 'getByEtapa']);
+
+    // Valorizaciones
+    Route::apiResource('valorizaciones-programadas', ValorizacionProgramadaController::class);
+    Route::apiResource('estados-valorizacion', EstadoValorizacionController::class);
+    Route::apiResource('valorizaciones-ejecutadas', ValorizacionEjecutadaController::class);
+
+    // Metas Físicas
+    Route::get('/metas-fisicas', [MetaFisicaController::class, 'index']);
+
+    // Estado Situacional
+    Route::apiResource('estado-situacional', EstadoSituacionalController::class);
+    Route::apiResource('acciones-estado-situacional', AccionEstadoSituacionalController::class);
+
+    // Rutas de Administración
+    Route::apiResource('usuarios', UserController::class);
 });

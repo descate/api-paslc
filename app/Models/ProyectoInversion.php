@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class ProyectoInversion extends Model
 {
@@ -11,32 +12,23 @@ class ProyectoInversion extends Model
 
     protected $table = 'proyectos.proyecto_inversion';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'cui',
         'descripcion',
         'alias',
         'monto_inversion',
-        'etapa_actual_id',
-        'estado_id',
-        'ubigeo',
-        'geom',
-        'created_by',
-        'updated_by'
+        'tiene_etapa'
     ];
 
-    // Relaciones
-    public function estado()
+    public function usuarios()
     {
-        return $this->belongsTo(EstadoGestion::class, 'estado_id');
-    }
-
-    public function etapaActual()
-    {
-        return $this->belongsTo(TipoEtapaPi::class, 'etapa_actual_id');
-    }
-
-    public function controlesGasto()
-    {
-        return $this->hasMany(ControlGasto::class, 'proyecto_id');
+        return $this->belongsToMany(
+            User::class,
+            'proyecto_user',
+            'proyecto_id',
+            'user_id'
+        );
     }
 }

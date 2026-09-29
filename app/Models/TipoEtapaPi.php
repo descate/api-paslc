@@ -10,13 +10,16 @@ class TipoEtapaPi extends Model
     use HasFactory;
 
     protected $table = 'catalogo.tipo_etapa_pi';
+    public $timestamps = false;
 
     protected $fillable = [
         'codigo',
         'nombre',
-        'orden',
-        'created_by',
-        'updated_by'
+        'activo'
+    ];
+
+    protected $casts = [
+        'activo' => 'boolean',
     ];
 
     // Relaciones

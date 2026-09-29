@@ -4,25 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\MetaFisica;
+use App\Models\EtapaProyecto;
+use App\Models\ProyectoInversion;
+use App\Models\TipoMetaFisica;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MetaFisicaController extends Controller
 {
-    /**
-     * Consultar todas las metas físicas o filtrar por proyecto_id mediante query param.
-     * Ejemplo: GET /api/metas-fisicas?proyecto_id=5
-     */
     public function index(Request $request): JsonResponse
     {
-        $query = MetaFisica::with('tipoMeta:id,codigo,nombre,unidad_medida');
+        $request->validate([
+            'etapa_proyecto_id' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    if (!EtapaProyecto::where('id', $value)->exists()) {
+                        $fail('La etapa de proyecto seleccionada no es válida.');
+                    }
+                }
+            ]
+        ]);
 
-        // Filtrar por proyecto si viene el parámetro en la URL
-        if ($request->has('proyecto_id')) {
-            $query->where('proyecto_id', $request->query('proyecto_id'));
-        }
-
-        $metas = $query->get();
+        $metas = MetaFisica::with('tipoMeta:id,codigo,nombre,unidad_medida')
+            ->where('etapa_proyecto_id', $request->query('etapa_proyecto_id'))
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -31,18 +37,38 @@ class MetaFisicaController extends Controller
         ]);
     }
 
-    /**
-     * Crear o actualizar una meta física.
-     */
     public function storeOrUpdate(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'proyecto_id'  => 'required|integer|exists:proyectos.proyecto_inversion,id',
-            'tipo_meta_id' => 'required|integer|exists:catalogo.tipo_meta_fisica,id',
-            'cantidad'     => 'required|numeric|min:0',
+            'proyecto_id' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    if (!ProyectoInversion::where('id', $value)->exists()) {
+                        $fail('El proyecto no existe.');
+                    }
+                }
+            ],
+            'tipo_meta_id' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    if (!TipoMetaFisica::where('id', $value)->exists()) {
+                        $fail('El tipo de meta no existe.');
+                    }
+                }
+            ],
+            'cantidad' => 'required|numeric|min:0',
+            'etapa_proyecto_id' => [
+                'nullable',
+                'integer',
+                function ($attribute, $value, $fail) {
+                    if ($value && !EtapaProyecto::where('id', $value)->exists()) {
+                        $fail('La etapa de proyecto no existe.');
+                    }
+                }
+            ],
         ]);
-
-        $usuario = auth()->user()?->username ?? 'system';
 
         $meta = MetaFisica::updateOrCreate(
             [
@@ -50,9 +76,8 @@ class MetaFisicaController extends Controller
                 'tipo_meta_id' => $validated['tipo_meta_id'],
             ],
             [
-                'cantidad'   => $validated['cantidad'],
-                'updated_by' => $usuario,
-                'created_by' => $usuario,
+                'cantidad'          => $validated['cantidad'],
+                'etapa_proyecto_id' => $validated['etapa_proyecto_id'] ?? null,
             ]
         );
 
@@ -63,9 +88,6 @@ class MetaFisicaController extends Controller
         ]);
     }
 
-    /**
-     * Eliminar una meta física por su ID.
-     */
     public function destroy(int $id): JsonResponse
     {
         $meta = MetaFisica::findOrFail($id);

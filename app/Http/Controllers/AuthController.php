@@ -57,21 +57,30 @@ class AuthController extends Controller
         // Si las credenciales son correctas, creamos un nuevo Token de Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Respondemos con el token de acceso
+        // Respondemos con el token de acceso Y LOS DATOS DEL USUARIO
         return response()->json([
             'message' => 'Ingreso exitoso',
             'access_token' => $token,
             'token_type' => 'Bearer',
+            // 👇 AGREGAMOS ESTE BLOQUE PARA ANGULAR 👇
+            'usuario' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'rol' => $user->rol
+            ]
         ], 200);
     }
 
     public function logout(Request $request)
     {
-        // 'currentAccessToken()' identifica exactamente el token que el usuario mandó en la cabecera
+        // Esto elimina ÚNICAMENTE el token actual que está usando el usuario.
+        // (Si tuviera la sesión abierta en su celular y en la PC, solo cierra la actual)
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Sesión cerrada correctamente y token revocado.'
-        ], 200);
+            'success' => true,
+            'message' => 'Sesión cerrada correctamente'
+        ]);
     }
 }
