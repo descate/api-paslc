@@ -32,7 +32,9 @@ class EstadoSituacionalController extends Controller
             $query->where('etapa_proyecto_id', $request->etapa_proyecto_id);
         }
 
-        $informes = $query->orderBy('fecha_reporte', 'desc')->get();
+        $informes = $query->orderBy('fecha_reporte', 'desc')
+                  ->orderBy('id', 'desc') // <-- EL DESEMPATE MÁGICO
+                  ->get();
 
         return response()->json($informes);
     }
